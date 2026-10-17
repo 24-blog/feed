@@ -1,4 +1,4 @@
-title: Park2
+title: Zoo Garden
 color: #6b8cae
 name: Murmur
 icon: icon.png
