@@ -1,4 +1,4 @@
-name: マBOY
+name: Murmur
 icon: icon.png
 ===
 2026-10-17 13:55
