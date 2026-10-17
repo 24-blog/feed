@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>フィード</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #1c1e21;
+    --sub: #8b9098;
+    --line: #eceef1;
+    --icon-bg: #e9edf2;
+    --icon-fg: #5b6573;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); }
+  body {
+    color: var(--text);
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  #feed { max-width: 600px; margin: 0 auto; }
+  .post {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .avatar {
+    flex: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--icon-bg);
+    color: var(--icon-fg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 17px;
+    overflow: hidden;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .body { min-width: 0; flex: 1; }
+  .head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; line-height: 1.4; }
+  .name { font-weight: 700; }
+  .date { color: var(--sub); font-size: 13px; }
+  .text {
+    margin: 4px 0 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .text a { color: inherit; text-decoration: underline; text-decoration-color: var(--sub); text-underline-offset: 2px; }
+  .image {
+    display: block;
+    max-width: 100%;
+    margin-top: 10px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+  }
+  .msg { padding: 32px 16px; color: var(--sub); text-align: center; }
+</style>
+</head>
+<body>
+<main id="feed" aria-live="polite"></main>
+
+<script>
+(function () {
+  var feed = document.getElementById('feed');
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function linkify(s) {
+    return esc(s).replace(/(https?:\/\/[^\s<]+)/g, function (u) {
+      return '<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + u + '</a>';
+    });
+  }
+
+  function parseDate(s) {
+    return new Date(String(s).replace(' ', 'T'));
+  }
+
+  function fmtDate(s) {
+    var d = parseDate(s);
+    if (isNaN(d)) return esc(s);
+    var p = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '/' + p(d.getMonth() + 1) + '/' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  function avatar(profile) {
+    if (profile.icon) {
+      return '<div class="avatar"><img src="' + esc(profile.icon) + '" alt=""></div>';
+    }
+    return '<div class="avatar">' + esc((profile.name || '?').charAt(0)) + '</div>';
+  }
+
+  function render(data) {
+    var profile = data.profile || {};
+    var posts = (data.posts || []).slice().sort(function (a, b) {
+      return parseDate(b.date) - parseDate(a.date);
+    });
+    if (!posts.length) {
+      feed.innerHTML = '<p class="msg">投稿はまだありません。posts.json に追加してください。</p>';
+      return;
+    }
+    feed.innerHTML = posts.map(function (p) {
+      return '<article class="post">' +
+        avatar(profile) +
+        '<div class="body">' +
+          '<div class="head"><span class="name">' + esc(profile.name || '') + '</span>' +
+          '<time class="date">' + fmtDate(p.date) + '</time></div>' +
+          '<p class="text">' + linkify(p.text || '') + '</p>' +
+          (p.image ? '<img class="image" src="' + esc(p.image) + '" alt="" loading="lazy">' : '') +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  fetch('posts.json', { cache: 'no-cache' })
+    .then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    })
+    .then(render)
+    .catch(function () {
+      feed.innerHTML = '<p class="msg">posts.json を読み込めませんでした。JSONの書式(カンマや引用符)を確認してください。</p>';
+    });
+})();
+</script>
+</body>
+</html>
