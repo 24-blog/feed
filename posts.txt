@@ -1,3 +1,5 @@
+title: Park2
+color: #6b8cae
 name: Murmur
 icon: icon.png
 ===
