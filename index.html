@@ -107,7 +107,7 @@
       return parseDate(b.date) - parseDate(a.date);
     });
     if (!posts.length) {
-      feed.innerHTML = '<p class="msg">投稿はまだありません。posts.json に追加してください。</p>';
+      feed.innerHTML = '<p class="msg">投稿はまだありません。posts.txt に追加してください。</p>';
       return;
     }
     feed.innerHTML = posts.map(function (p) {
@@ -123,14 +123,51 @@
     }).join('');
   }
 
-  fetch('posts.json', { cache: 'no-cache' })
+  // posts.txt の書式:
+  //   name: 名前
+  //   icon: icon.svg
+  //   ===
+  //   2026-10-17 12:00
+  //   本文(改行そのまま)
+  //   image: img/xxx.jpg   ← 任意
+  //   ---
+  //   次の投稿...
+  function parse(src) {
+    src = src.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+    var idx = src.search(/^===\s*$/m);
+    var head = idx >= 0 ? src.slice(0, idx) : '';
+    var rest = idx >= 0 ? src.slice(src.indexOf('\n', idx) + 1) : src;
+
+    var profile = {};
+    head.split('\n').forEach(function (line) {
+      var m = line.match(/^(name|icon)\s*[:：]\s*(.*)$/);
+      if (m) profile[m[1]] = m[2].trim();
+    });
+
+    var posts = rest.split(/^---\s*$/m).map(function (block) {
+      var lines = block.replace(/^\n+|\s+$/g, '').split('\n');
+      if (!lines[0]) return null;
+      var date = lines.shift().trim();
+      var image = '';
+      var text = lines.filter(function (l) {
+        var m = l.match(/^image\s*[:：]\s*(.+)$/);
+        if (m) { image = m[1].trim(); return false; }
+        return true;
+      }).join('\n').trim();
+      return { date: date, text: text, image: image };
+    }).filter(Boolean);
+
+    return { profile: profile, posts: posts };
+  }
+
+  fetch('posts.txt', { cache: 'no-cache' })
     .then(function (r) {
       if (!r.ok) throw new Error(r.status);
-      return r.json();
+      return r.text();
     })
-    .then(render)
+    .then(function (t) { render(parse(t)); })
     .catch(function () {
-      feed.innerHTML = '<p class="msg">posts.json を読み込めませんでした。JSONの書式(カンマや引用符)を確認してください。</p>';
+      feed.innerHTML = '<p class="msg">posts.txt を読み込めませんでした。ファイル名と置き場所を確認してください。</p>';
     });
 })();
 </script>
