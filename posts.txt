@@ -3,7 +3,7 @@ color: #6b8cae
 name: Murmur
 icon: icon.png
 ===
-2026-10-18 13:23
+2026-10-18 13:28
 www.47news.jp/15097975.html
 
 フランスで55万人規模の暴動とな。
