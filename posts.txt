@@ -1,6 +1,6 @@
-title: Zoo Garden
+title: Murmur
 color: #6b8cae
-name: Murmur
+name: id:pcm-puls
 icon: icon.png
 ===
 2026-10-19 11:46
