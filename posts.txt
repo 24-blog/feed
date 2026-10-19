@@ -1,6 +1,6 @@
-title: Murmur
+title: 短文投稿
 color: #6b8cae
-name: id:pcm-puls
+name: 金奼真少年
 icon: icon.png
 ===
 2026-10-19 11:46
