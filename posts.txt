@@ -1,5 +1,3 @@
-title: Murmur
-color: #6b8cae
 name: 235
 icon: icon.png
 ===
