@@ -6,55 +6,34 @@
 <title>フィード</title>
 <style>
   :root {
-    --bg: #ffffff;
-    --text: #1c1e21;
-    --sub: #8b9098;
-    --line: #eceef1;
+    --name: #1c1e21;     /* 名前の色(吹き出しの外=背景の上) */
+    --sub: #8b9098;      /* 日付の色(吹き出しの外=背景の上) */
+    --bubble: #ffffff;   /* 吹き出しの背景 */
+    --bubble-text: #1c1e21;
     --icon-bg: #e9edf2;
     --icon-fg: #5b6573;
   }
+  /* 単体で開いた時(iframeに埋め込まれていない時)だけ、白い吹き出しが見えるようダーク背景にする */
+  html.standalone {
+    --name: #e8eaed;
+    --sub: #9aa0a8;
+    --page: #17191c;
+  }
   * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); }
+  html, body { margin: 0; background: transparent; }
+  html.standalone, html.standalone body { background: var(--page); }
   body {
-    color: var(--text);
+    color: var(--bubble-text);
     font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
     font-size: 15px;
     line-height: 1.7;
     -webkit-text-size-adjust: 100%;
   }
-  #bar {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: var(--bar, #6b8cae);
-    color: var(--bar-text, #fff);
-  }
-  #bar[hidden] { display: none; }
-  #bar .inner {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 10px 16px;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: .06em;
-    line-height: 1.4;
-  }
-  /* 縁の下で、色が本文へにじんで溶けるぼかし */
-  #bar::after {
-    content: "";
-    position: absolute;
-    left: 0; right: 0;
-    top: 100%;
-    height: 18px;
-    background: linear-gradient(to bottom, var(--bar-fade, rgba(107,140,174,.22)), rgba(255,255,255,0));
-    pointer-events: none;
-  }
-  #feed { max-width: 600px; margin: 0 auto; }
+  #feed { max-width: 600px; margin: 0 auto; padding: 8px 0; }
   .post {
     display: flex;
     gap: 12px;
-    padding: 16px;
-    border-bottom: 1px solid var(--line);
+    padding: 10px 16px;
   }
   .avatar {
     flex: none;
@@ -72,11 +51,33 @@
   }
   .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .body { min-width: 0; flex: 1; }
-  .head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; line-height: 1.4; }
-  .name { font-weight: 700; }
+  .head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; line-height: 1.4; margin-bottom: 6px; }
+  .name { font-weight: 700; color: var(--name); }
   .date { color: var(--sub); font-size: 13px; }
+
+  /* 白い吹き出し */
+  .bubble {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    padding: 10px 14px;
+    background: var(--bubble);
+    color: var(--bubble-text);
+    border-radius: 4px 16px 16px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.18);
+  }
+  /* 左上のしっぽ(アイコン側) */
+  .bubble::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -7px;
+    border-style: solid;
+    border-width: 0 8px 10px 0;
+    border-color: transparent var(--bubble) transparent transparent;
+  }
   .text {
-    margin: 4px 0 0;
+    margin: 0;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
@@ -84,19 +85,22 @@
   .image {
     display: block;
     max-width: 100%;
-    margin-top: 10px;
+    margin-top: 8px;
     border-radius: 12px;
-    border: 1px solid var(--line);
   }
   .msg { padding: 32px 16px; color: var(--sub); text-align: center; }
 </style>
 </head>
 <body>
-<header id="bar" hidden><div class="inner"></div></header>
 <main id="feed" aria-live="polite"></main>
 
 <script>
 (function () {
+  // 単体で開かれている場合のみダーク背景(埋め込み時は透過のまま)
+  try {
+    if (window.top === window.self) document.documentElement.classList.add('standalone');
+  } catch (e) {}
+
   var feed = document.getElementById('feed');
 
   function esc(s) {
@@ -129,24 +133,8 @@
     return '<div class="avatar">' + esc((profile.name || '?').charAt(0)) + '</div>';
   }
 
-  function applyBar(profile) {
-    var bar = document.getElementById('bar');
-    if (!profile.title) { bar.hidden = true; return; }
-    var color = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(profile.color || '') ? profile.color : '#6b8cae';
-    var hex = color.slice(1);
-    if (hex.length === 3) hex = hex.replace(/./g, '$&$&');
-    var r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
-    var lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    bar.style.setProperty('--bar', color);
-    bar.style.setProperty('--bar-text', lum > 0.7 ? '#1c1e21' : '#ffffff');
-    bar.style.setProperty('--bar-fade', 'rgba(' + r + ',' + g + ',' + b + ',.22)');
-    bar.querySelector('.inner').textContent = profile.title;
-    bar.hidden = false;
-  }
-
   function render(data) {
     var profile = data.profile || {};
-    applyBar(profile);
     var posts = (data.posts || []).slice().sort(function (a, b) {
       return parseDate(b.date) - parseDate(a.date);
     });
@@ -160,16 +148,16 @@
         '<div class="body">' +
           '<div class="head"><span class="name">' + esc(profile.name || '') + '</span>' +
           '<time class="date">' + fmtDate(p.date) + '</time></div>' +
-          '<p class="text">' + linkify(p.text || '') + '</p>' +
-          (p.image ? '<img class="image" src="' + esc(p.image) + '" alt="" loading="lazy">' : '') +
+          '<div class="bubble">' +
+            '<p class="text">' + linkify(p.text || '') + '</p>' +
+            (p.image ? '<img class="image" src="' + esc(p.image) + '" alt="" loading="lazy">' : '') +
+          '</div>' +
         '</div>' +
       '</article>';
     }).join('');
   }
 
   // posts.txt の書式:
-  //   title: フィードのタイトル(上部の色つきバーに表示)
-  //   color: #6b8cae(バーの色。省略可)
   //   name: 名前
   //   icon: icon.svg
   //   ===
@@ -178,6 +166,7 @@
   //   image: img/xxx.jpg   ← 任意
   //   ---
   //   次の投稿...
+  //   (title: / color: の行が残っていても無視されます)
   function parse(src) {
     src = src.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
     var idx = src.search(/^===\s*$/m);
@@ -186,7 +175,7 @@
 
     var profile = {};
     head.split('\n').forEach(function (line) {
-      var m = line.match(/^(name|icon|title|color)\s*[:：]\s*(.*)$/);
+      var m = line.match(/^(name|icon)\s*[:：]\s*(.*)$/);
       if (m) profile[m[1]] = m[2].trim();
     });
 
