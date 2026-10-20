@@ -1,6 +1,6 @@
-title: お知らせ
+title: Murmur
 color: #6b8cae
-name: ブログ管理人
+name: 235
 icon: icon.png
 ===
 2026-10-17 13:55
