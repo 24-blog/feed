@@ -4,11 +4,11 @@ icon: icon.png
 2026-10-17 13:55
 Audio Credits
 BGM∶新天地
-Composer∶H/MIX GALLERY（秋山裕和）
+Composer∶H/MIX GALLERY
 https://www.hmix.net
 
 BGM∶Departure
-Composer∶H/MIX GALLERY（秋山裕和）
+Composer∶H/MIX GALLERY
 https://www.hmix.net
 ---
 2026-10-17 13:26
