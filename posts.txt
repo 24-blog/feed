@@ -1,6 +1,12 @@
 name: 235
 icon: icon.png
 ===
+2026-11-15 04:20
+Political Map has been rebuilt based on https://24-blog.github.io/o3d/
+
+Repository
+https://github.com/24-blog/o3d
+---
 2026-10-17 13:55
 Audio Credits
 BGM∶新天地
