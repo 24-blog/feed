@@ -2,7 +2,9 @@ name: 235
 icon: icon.png
 ===
 2026-11-15 04:20
-Political Map has been rebuilt based on https://github.com/24-blog/o3d
+Political Map
+Adapted from: Octant 3D MAP
+https://github.com/24-blog/o3d
 ---
 2026-10-17 13:55
 Audio Credits
